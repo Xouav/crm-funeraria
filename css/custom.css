@@ -1,0 +1,101 @@
+/* css/custom.css */
+/* Estilos a medida específicos del CRM para la funeraria */
+
+:root {
+    --navy-blue: #1a252f;
+    --emerald-green: #18bc9c;
+    --traffic-red: #e74c3c;
+    --traffic-yellow: #f39c12;
+    --traffic-green: #2ecc71;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.bg-navy {
+    background-color: var(--navy-blue);
+}
+
+/* Sidebar Custom Layout */
+#sidebar-menu {
+    min-height: calc(100vh - 56px);
+}
+
+#sidebar-menu .nav-link {
+    color: #bdc3c7;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+#sidebar-menu .nav-link:hover, 
+#sidebar-menu .nav-link.active {
+    color: #fff;
+    background-color: var(--emerald-green);
+}
+
+/* Tarjetas de Semáforo de Rendimiento (Indicadores Visuales Interactivos) */
+.card-semaforo {
+    border-left: 8px solid #ccc;
+    transition: transform 0.2s ease;
+}
+.card-semaforo:hover {
+    transform: translateY(-2px);
+}
+.card-semaforo.rojo { border-left-color: var(--traffic-red); }
+.card-semaforo.amarillo { border-left-color: var(--traffic-yellow); }
+.card-semaforo.verde { border-left-color: var(--traffic-green); }
+
+/* Simulación de Gráfico de Anillo mediante SVG Nativo */
+.donut-svg {
+    transform: rotate(-90deg);
+}
+.donut-bg {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 3.8;
+}
+.donut-fill {
+    fill: none;
+    stroke-width: 3.8;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s ease-in-out;
+}
+.rojo .donut-fill { stroke: var(--traffic-red); }
+.amarillo .donut-fill { stroke: var(--traffic-yellow); }
+.verde .donut-fill { stroke: var(--traffic-green); }
+
+/* Tablero de Columnas Secuenciales (Pipeline del Embudo de Ventas) */
+.pipeline-scroll-wrapper {
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 1rem;
+}
+
+.pipeline-column {
+    min-width: 280px;
+    max-width: 350px;
+    flex: 1;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.pipeline-column h5 {
+    border-bottom: 3px solid var(--navy-blue);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.prospect-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}

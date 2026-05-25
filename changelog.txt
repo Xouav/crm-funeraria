@@ -1,0 +1,29 @@
+================================================================================
+CHANGELOG: MODIFICACIONES ASIGNADAS AL FRONT-END DEL CRM FUNERARIA
+================================================================================
+
+1. REESTRUCTURACIÓN DE CÓDIGO HTML5 SEMÁNTICO Y ACCESIBILIDAD (UI/UX)
+   - Se removieron contenedores genéricos y se reemplazaron por etiquetas estructurales
+     (<header>, <nav>, <main>, <article>, <footer>) garantizando una lectura limpia 
+     por lectores de pantalla y navegadores web modernos.
+   - Adición de propiedades explícitas 'role' y vinculación explícita de inputs con 
+     sus respectivos elementos <label for="..."> aumentados para accesibilidad básica.
+
+2. LOGIC DE "SOFT DELETE" INTERNA Y PROTECCIÓN DE INTEGRIDAD REFERENCIAL (HU02 / HU03)
+   - Se eliminó cualquier opción física de borrado. La desactivación de ítems del 
+     catálogo modifica el flag lógico 'active: false'. 
+   - Modificación en 'renderPipelineStages' para que el selector de compras filtre los
+     servicios inactivos, evitando ventas erróneas pero permitiendo que el objeto
+     histórico 'sales' renderice contratos antiguos sin alteraciones de precio.
+
+3. CONEXIÓN API CERRADA DE GOOGLE CALENDAR EN ETAPA 2 (HU07)
+   - Se incluyó la simulación explícita de transmisión por consola ('console.log')
+     que detalla el mapeo técnico del objeto JSON enviado a la API de Google, 
+     acompañado de ventanas emergentes interactivas informativas hacia el operador.
+
+4. CONTROL TOTAL DE RESPONSIVIDAD (MEDIA QUERIES CSS3)
+   - Se inyectaron consultas de medios focalizadas:
+     * En 360px (móviles): El pipeline transmuta de una cuadrícula horizontal a un 
+       flujo apilado vertical ergonómico para evitar desbordamientos de pantalla.
+     * En 1024px (escritorio): El menú lateral se fija a la izquierda y el contenedor 
+       principal adquiere un margen automático perfecto, mitigando saltos de renderizado.

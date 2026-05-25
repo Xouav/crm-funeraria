@@ -1,60 +1,11 @@
 // js/app.js
-// Controlador Maestro del Front-End (SPA) - Simulación de Procesos de Negocio en Memoria RAM
+// Controlador Maestro Front-End SPA - Lógica de Negocio y Reglas Críticas del PDF
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", () => {
     initApp();
 });
 
-// Inicialización de Escuchadores y Enrutamiento Inicial
-function initApp() {
-    // Escuchar el cambio en el selector rápido de rol de usuario
-    document.getElementById('role-selector').addEventListener('change', function(e) {
-        const selectedRole = e.target.value;
-        if (selectedRole === 'Administrador') {
-            localDB.session = { userId: 1, userName: "Ana María Administradora", role: "Administrador" };
-            navigate('admin-catalog');
-        } else {
-            localDB.session = { userId: 2, userName: "Carlos Vendedor Terreno", role: "Vendedor" };
-            navigate('vendedor-dashboard');
-        }
-        updateNavbarSession();
-    });
-
-    // Cargar datos por defecto de la sesión en barra superior
-    updateNavbarSession();
-    // Forzar la carga de la vista inicial por defecto (Dashboard del vendedor)
-    navigate('vendedor-dashboard');
-}
-
-// Sincroniza los textos de sesión en el layout común
-function updateNavbarSession() {
-    document.getElementById('session-user-name').innerText = localDB.session.userName;
-    document.getElementById('session-user-role').innerText = localDB.session.role;
-    document.getElementById('role-selector').value = localDB.session.role;
-    renderMenuLinks();
-}
-
-// Construye dinámicamente el menú lateral según las restricciones de perfil de usuario
-function renderMenuLinks() {
-    const menuContainer = document.getElementById('dynamic-menu-links');
-    let html = '';
-
-    if (localDB.session.role === 'Administrador') {
-        html += `
-            <li class="nav-item"><a class="nav-link active" href="#" onclick="navigate('admin-catalog')">Gestión Catálogo</a></li>
-            <li class="nav-item"><a class="nav-link" href="#" onclick="navigate('admin-goals')">Metas Corporativas</a></li>
-        `;
-    } else {
-        html += `
-            <li class="nav-item"><a class="nav-link active" href="#" onclick="navigate('vendedor-dashboard')">Mi Dashboard</a></li>
-            <li class="nav-item"><a class="nav-link" href="#" onclick="navigate('vendedor-thresholds')">Mis Umbrales</a></li>
-            <li class="nav-item"><a class="nav-link" href="#" onclick="navigate('vendedor-sales')">Embudo de Ventas</a></li>
-        `;
-    }
-    menuContainer.innerHTML = html;
-}
-
-// Simulación del motor de base de datos en memoria RAM local
+// Base de datos simulada en memoria RAM para cumplir persistencia local durante el uso
 const localDB = {
     session: { userId: 2, userName: "Carlos Vendedor Terreno", role: "Vendedor" },
     
@@ -77,6 +28,7 @@ const localDB = {
         4: { name: "Ventas", dailyTarget: 1, redMax: 40, yellowMax: 79, greenMin: 80 }
     },
 
+    // Umbrales específicos del vendedor que se pueden sobrescribir de forma aislada
     vendedorThresholds: {
         1: { redMax: 40, yellowMax: 79, greenMin: 80 },
         2: { redMax: 40, yellowMax: 79, greenMin: 80 },
@@ -91,33 +43,62 @@ const localDB = {
     sales: []
 };
 
-// Manejador del Sistema de Navegación de la SPA (Cambio de Vistas sin recargar página)
-function navigate(viewName) {
-    document.querySelectorAll('#sidebar-menu .nav-link').forEach(link => {
-        link.classList.remove('active');
-        if(link.getAttribute('onclick').includes(viewName)) {
-            link.classList.add('active');
+function initApp() {
+    // Escucha el cambio rápido de roles requerido para simular el Login
+    document.getElementById('role-selector').addEventListener('change', (e) => {
+        const selectedRole = e.target.value;
+        if (selectedRole === 'Administrador') {
+            localDB.session = { userId: 1, userName: "Ana María Administradora", role: "Administrador" };
+            navigate('admin-catalog');
+        } else {
+            localDB.session = { userId: 2, userName: "Carlos Vendedor Terreno", role: "Vendedor" };
+            navigate('vendedor-dashboard');
         }
+        updateNavbarSession();
     });
+
+    updateNavbarSession();
+}
+
+function updateNavbarSession() {
+    document.getElementById('session-user-name').innerText = localDB.session.userName;
+    document.getElementById('session-user-role').innerText = localDB.session.role;
+    document.getElementById('role-selector').value = localDB.session.role;
+    renderMenuLinks();
+}
+
+function renderMenuLinks() {
+    const menuContainer = document.getElementById('dynamic-menu-links');
+    let html = '';
+
+    if (localDB.session.role === 'Administrador') {
+        html += `
+            <li class="nav-item"><a class="nav-link" href="#" id="link-admin-catalog" onclick="navigate('admin-catalog')">Gestión Catálogo</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" id="link-admin-goals" onclick="navigate('admin-goals')">Metas Corporativas</a></li>
+        `;
+    } else {
+        html += `
+            <li class="nav-item"><a class="nav-link" href="#" id="link-vendedor-dashboard" onclick="navigate('vendedor-dashboard')">Mi Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" id="link-vendedor-thresholds" onclick="navigate('vendedor-thresholds')">Mis Umbrales</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" id="link-vendedor-sales" onclick="navigate('vendedor-sales')">Embudo de Ventas</a></li>
+        `;
+    }
+    menuContainer.innerHTML = html;
+}
+
+function navigate(viewName) {
+    document.querySelectorAll('#sidebar-menu .nav-link').forEach(link => link.classList.remove('active'));
+    const targetedLink = document.getElementById(`link-${viewName}`);
+    if (targetedLink) targetedLink.classList.add('active');
 
     const mainContainer = document.getElementById('view-container');
     
     switch(viewName) {
-        case 'admin-catalog':
-            renderAdminCatalog(mainContainer);
-            break;
-        case 'admin-goals':
-            renderAdminGoals(mainContainer);
-            break;
-        case 'vendedor-dashboard':
-            renderVendedorDashboard(mainContainer);
-            break;
-        case 'vendedor-thresholds':
-            renderVendedorThresholds(mainContainer);
-            break;
-        case 'vendedor-sales':
-            renderVendedorSales(mainContainer);
-            break;
+        case 'admin-catalog': renderAdminCatalog(mainContainer); break;
+        case 'admin-goals': renderAdminGoals(mainContainer); break;
+        case 'vendedor-dashboard': renderVendedorDashboard(mainContainer); break;
+        case 'vendedor-thresholds': renderVendedorThresholds(mainContainer); break;
+        case 'vendedor-sales': renderVendedorSales(mainContainer); break;
     }
 }
 
@@ -127,27 +108,25 @@ function evaluateTrafficLight(percentage, thresholds) {
     return 'verde';
 }
 
-// VISTA: DASHBOARD DEL VENDEDOR
+// ==========================================================================
+// RENDERIZADO DE VISTAS (SPA)
+// ==========================================================================
+
 function renderVendedorDashboard(container) {
     const filter = document.getElementById('dashboard-time-filter') ? document.getElementById('dashboard-time-filter').value : 'diario';
-    
-    let scale = 1;
-    if (filter === 'semanal') scale = 5;
-    if (filter === 'mensual') scale = 22;
+    let scale = filter === 'semanal' ? 5 : (filter === 'mensual' ? 22 : 1);
 
     container.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-2">
             <div>
-                <h2>Mi Dashboard de Rendimiento</h2>
-                <p class="text-muted small">Cálculo en tiempo real según cuotas y umbrales activos.</p>
+                <h1 class="h2 m-0">Mi Dashboard de Rendimiento</h1>
+                <p class="text-muted small m-0">Cálculos automáticos en tiempo real bajo tus umbrales activos.</p>
             </div>
-            <div>
-                <select id="dashboard-time-filter" class="form-select" onchange="navigate('vendedor-dashboard')">
-                    <option value="diario" ${filter==='diario'?'selected':''}>Filtro: Vista Diaria</option>
-                    <option value="semanal" ${filter==='semanal'?'selected':''}>Filtro: Vista Semanal</option>
-                    <option value="mensual" ${filter==='mensual'?'selected':''}>Filtro: Vista Mensual</option>
-                </select>
-            </div>
+            <select id="dashboard-time-filter" class="form-select form-select-sm w-auto" onchange="navigate('vendedor-dashboard')">
+                <option value="diario" ${filter==='diario'?'selected':''}>Vista Diaria</option>
+                <option value="semanal" ${filter==='semanal'?'selected':''}>Vista Semanal</option>
+                <option value="mensual" ${filter==='mensual'?'selected':''}>Vista Mensual</option>
+            </select>
         </div>
         <div class="row g-3" id="dashboard-metrics-grid"></div>
     `;
@@ -170,17 +149,17 @@ function renderVendedorDashboard(container) {
         const strokeDashoffset = circumference - (Math.min(pct, 100) / 100) * circumference;
 
         const card = document.createElement('div');
-        card.className = `col-md-6 col-lg-3`;
+        card.className = `col-12 col-sm-6 col-xl-3`;
         card.innerHTML = `
-            <div class="card card-semaforo ${lightColor} shadow-sm h-100 p-3">
+            <div class="card card-semaforo ${lightColor} h-100 p-3">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <h6 class="text-muted text-uppercase small m-0">${goalData.name}</h6>
-                        <h3 class="my-2">${count} <span class="fs-6 text-muted fw-normal">de ${targetScaled}</span></h3>
-                        <span class="badge bg-light text-dark border">${pct}% Cumplido</span>
+                        <span class="text-muted text-uppercase small d-block fw-bold">${goalData.name}</span>
+                        <span class="h2 d-block my-1 fw-bold">${count} <span class="fs-6 text-muted fw-normal">de ${targetScaled}</span></span>
+                        <span class="badge bg-light text-dark border">${pct}% de la meta</span>
                     </div>
-                    <div style="width: 65px; height: 65px;">
-                        <svg class="donut-svg" viewBox="0 0 42 42" width="100%" height="100%">
+                    <div style="width: 60px; height: 60px;">
+                        <svg class="donut-svg" viewBox="0 0 42 42" width="100%" height="100%" aria-hidden="true">
                             <circle class="donut-bg" cx="21" cy="21" r="${radius}"></circle>
                             <circle class="donut-fill" cx="21" cy="21" r="${radius}" 
                                     stroke-dasharray="${circumference}" 
@@ -189,9 +168,7 @@ function renderVendedorDashboard(container) {
                     </div>
                 </div>
                 <div class="border-top mt-3 pt-2">
-                    <p class="m-0 text-success fw-bold" style="font-size:0.75rem;">
-                        💡 Llevas ${count} de ${targetScaled} ${goalData.name.toLowerCase()} ${filter === 'diario' ? 'hoy' : filter === 'semanal' ? 'esta semana' : 'este mes'}.
-                    </p>
+                    <small class="text-secondary d-block">💡 Llevas ${count} objetivos registrados ${filter === 'diario' ? 'hoy' : filter === 'semanal' ? 'esta semana' : 'este mes'}.</small>
                 </div>
             </div>
         `;
@@ -199,15 +176,14 @@ function renderVendedorDashboard(container) {
     }
 }
 
-// VISTA: PERSONALIZACIÓN DE UMBRALES
 function renderVendedorThresholds(container) {
     container.innerHTML = `
-        <h2>Mis Umbrales de Rendimiento Personalizados</h2>
-        <p class="text-muted">Adapta los niveles de disparo de color de tus semáforos para aumentar tu nivel de autoexigencia.</p>
-        <div class="card shadow-sm p-4">
+        <h1 class="h2">Personalización de Umbrales Personales</h1>
+        <p class="text-muted">Ajusta de forma segura tus niveles de autoexigencia sin alterar las métricas de la empresa.</p>
+        <div class="card shadow-sm p-4 bg-white">
             <form id="form-thresholds">
                 <div id="thresholds-inputs-container"></div>
-                <button type="submit" class="btn btn-primary mt-3">Guardar Configuración Personalizada</button>
+                <button type="submit" class="btn btn-emerald text-white fw-bold mt-2">Guardar Mis Límites</button>
             </form>
         </div>
     `;
@@ -221,27 +197,26 @@ function renderVendedorThresholds(container) {
         const row = document.createElement('div');
         row.className = "row g-3 align-items-center mb-4 border-bottom pb-3";
         row.innerHTML = `
-            <div class="col-md-3"><strong>Etapa ${stageId}: ${stageName}</strong></div>
-            <div class="col-md-3">
-                <label class="small text-muted d-block">Techo Alerta Roja (%)</label>
-                <input type="number" class="form-control form-control-sm border-danger" name="red_${stageId}" value="${currentT.redMax}" min="0" max="100" required>
+            <div class="col-12 col-md-3"><strong class="text-navy">${stageId}. ${stageName}</strong></div>
+            <div class="col-4 col-md-3">
+                <label class="small text-danger fw-bold d-block mb-1">Techo Rojo (%)</label>
+                <input type="number" class="form-control form-control-sm" name="red_${stageId}" value="${currentT.redMax}" min="0" max="100" required>
             </div>
-            <div class="col-md-3">
-                <label class="small text-muted d-block">Techo Alerta Amarilla (%)</label>
-                <input type="number" class="form-control form-control-sm border-warning" name="yellow_${stageId}" value="${currentT.yellowMax}" min="0" max="100" required>
+            <div class="col-4 col-md-3">
+                <label class="small text-warning fw-bold d-block mb-1">Techo Amarillo (%)</label>
+                <input type="number" class="form-control form-control-sm" name="yellow_${stageId}" value="${currentT.yellowMax}" min="0" max="100" required>
             </div>
-            <div class="col-md-3">
-                <label class="small text-muted d-block">Piso Alerta Verde (%)</label>
-                <input type="number" class="form-control form-control-sm border-success" name="green_${stageId}" value="${currentT.greenMin}" min="0" max="100" required>
+            <div class="col-4 col-md-3">
+                <label class="small text-success fw-bold d-block mb-1">Piso Verde (%)</label>
+                <input type="number" class="form-control form-control-sm" name="green_${stageId}" value="${currentT.greenMin}" min="0" max="100" required>
             </div>
         `;
         inputsContainer.appendChild(row);
     }
 
-    document.getElementById('form-thresholds').addEventListener('submit', function(e) {
+    document.getElementById('form-thresholds').addEventListener('submit', (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        
         for (let stageId = 1; stageId <= 4; stageId++) {
             localDB.vendedorThresholds[stageId] = {
                 redMax: parseInt(formData.get(`red_${stageId}`)),
@@ -249,30 +224,29 @@ function renderVendedorThresholds(container) {
                 greenMin: parseInt(formData.get(`green_${stageId}`))
             };
         }
-        alert("¡Éxito! Tus umbrales personalizados han sido guardados en memoria.");
+        alert("Configuración personal guardada exitosamente en memoria local.");
         navigate('vendedor-dashboard');
     });
 }
 
-// VISTA: EMBUDO DE VENTAS
 function renderVendedorSales(container) {
     container.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h2>Embudo de Ventas (Perfilado Progresivo)</h2>
-                <p class="text-muted small">Flujo estrictamente secuencial de 4 etapas para capturar datos comerciales.</p>
+                <h1 class="h2 m-0">Embudo de Ventas</h1>
+                <p class="text-muted small m-0">Perfilado Progresivo obligatorio por etapas secuenciales.</p>
             </div>
-            <button class="btn btn-success btn-sm" data-bs-toggle="collapse" data-bs-target="#new-prospect-box">+ Nuevo Prospecto Inicial</button>
+            <button class="btn btn-emerald text-white btn-sm fw-bold" data-bs-toggle="collapse" data-bs-target="#new-prospect-box">+ Captura Inicial</button>
         </div>
 
         <div class="collapse mb-4" id="new-prospect-box">
-            <div class="card p-3 shadow-sm bg-white border-success">
-                <h6>Ingresar Captura de Terreno (Etapa 1 - Solo 3 campos)</h6>
-                <form id="form-add-prospect" class="row g-2 mt-1">
-                    <div class="col-md-4"><input type="text" class="form-control form-control-sm" name="name" placeholder="Nombre completo" required></div>
-                    <div class="col-md-3"><input type="text" class="form-control form-control-sm" name="comuna" placeholder="Comuna" required></div>
-                    <div class="col-md-3"><input type="text" class="form-control form-control-sm" name="phone" placeholder="Teléfono" required></div>
-                    <div class="col-md-2"><button type="submit" class="btn btn-success btn-sm w-100">Registrar</button></div>
+            <div class="card p-3 shadow-sm border-success bg-white">
+                <h2 class="h6 text-success fw-bold mb-2">Fase Inicial Terreno (Baja fricción: 3 campos obligatorios)</h2>
+                <form id="form-add-prospect" class="row g-2">
+                    <div class="col-md-4"><input type="text" class="form-control form-control-sm" name="name" placeholder="Nombre completo del prospecto" required></div>
+                    <div class="col-md-4"><input type="text" class="form-control form-control-sm" name="comuna" placeholder="Comuna de residencia" required></div>
+                    <div class="col-md-2"><input type="tel" class="form-control form-control-sm" name="phone" placeholder="+569..." required></div>
+                    <div class="col-md-2"><button type="submit" class="btn btn-success btn-sm w-100 fw-bold">Registrar</button></div>
                 </form>
             </div>
         </div>
@@ -280,10 +254,10 @@ function renderVendedorSales(container) {
         <div class="pipeline-scroll-wrapper" id="pipeline-columns-container"></div>
     `;
 
-    document.getElementById('form-add-prospect').addEventListener('submit', function(e) {
+    document.getElementById('form-add-prospect').addEventListener('submit', (e) => {
         e.preventDefault();
         const f = new FormData(e.target);
-        const nuevo = {
+        localDB.prospects.push({
             id: Date.now(),
             userId: localDB.session.userId,
             stage: 1,
@@ -291,9 +265,8 @@ function renderVendedorSales(container) {
             comuna: f.get('comuna'),
             phone: f.get('phone'),
             email: "", rut: "", gender: "", birthdate: "", document: "", assignedItemId: null, finalPrice: null
-        };
-        localDB.prospects.push(nuevo);
-        alert("Cliente registrado con éxito en la Etapa 1.");
+        });
+        alert("Prospecto incorporado en la Etapa 1.");
         navigate('vendedor-sales');
     });
 
@@ -314,7 +287,7 @@ function renderPipelineStages() {
     stagesDef.forEach(st => {
         const col = document.createElement('div');
         col.className = "pipeline-column";
-        col.innerHTML = `<h5>${st.title}</h5><div id="box-stage-${st.id}"></div>`;
+        col.innerHTML = `<h3>${st.title}</h3><div id="box-stage-${st.id}" class="mt-3"></div>`;
         container.appendChild(col);
     });
 
@@ -322,66 +295,68 @@ function renderPipelineStages() {
         if(p.userId !== localDB.session.userId) return;
 
         const box = document.getElementById(`box-stage-${p.stage}`);
-        const card = document.createElement('div');
-        card.className = "prospect-card shadow-sm";
+        const card = document.createElement('article');
+        card.className = "prospect-card";
         
-        let innerHTML = `<strong>${p.name}</strong><br><span class="text-muted small">${p.comuna} | ${p.phone}</span>`;
+        let innerHTML = `<h4 class="h6 m-0 fw-bold">${p.name}</h4><small class="text-muted">${p.comuna} | Teléfono: ${p.phone}</small>`;
 
         if (p.stage === 1) {
             innerHTML += `
-                <form class="mt-2 pt-2 border-top">
-                    <label class="small text-primary fw-bold mb-1">Avanzar a Etapa 2 (Exige Correo)</label>
-                    <input type="email" class="form-control form-control-sm mb-1" placeholder="correo@cliente.cl" required id="mail-${p.id}">
-                    <button type="button" class="btn btn-primary btn-sm w-100" onclick="processAdvanceStage1(${p.id})">Agendar Reunión</button>
-                </form>
+                <div class="mt-3 pt-2 border-top">
+                    <label class="small text-primary fw-bold mb-1" for="mail-${p.id}">Avanzar a Etapa 2 (Exige Email)</label>
+                    <input type="email" class="form-control form-control-sm mb-2" id="mail-${p.id}" placeholder="correo@ejemplo.cl" required>
+                    <button type="button" class="btn btn-primary btn-sm w-100 font-monospace" style="font-size: 0.75rem" onclick="processAdvanceStage1(${p.id})">Simular Envío Invitación</button>
+                </div>
             `;
         } else if (p.stage === 2) {
-            innerHTML += `<br><span class="badge bg-info text-dark mt-1">${p.email}</span>`;
+            innerHTML += `<div class="my-1"><span class="badge bg-light text-dark border">${p.email}</span></div>`;
             innerHTML += `
-                <form class="mt-2 pt-2 border-top">
-                    <label class="small text-warning fw-bold mb-1">Avanzar a Etapa 3 (Datos Duros)</label>
-                    <input type="text" class="form-control form-control-sm mb-1" placeholder="12.345.678-K" required id="rut-${p.id}">
+                <div class="mt-2 pt-2 border-top">
+                    <span class="small text-warning fw-bold d-block mb-1">Avanzar a Etapa 3 (Datos Duros)</span>
+                    <input type="text" class="form-control form-control-sm mb-1" placeholder="RUT (12345678-9)" id="rut-${p.id}" required>
                     <select class="form-select form-select-sm mb-1" id="gender-${p.id}">
                         <option value="Femenino">Femenino</option><option value="Masculino">Masculino</option><option value="Otro">Otro</option>
                     </select>
-                    <input type="date" class="form-control form-control-sm mb-1" required id="birth-${p.id}">
-                    <button type="button" class="btn btn-warning btn-sm w-100" onclick="processAdvanceStage2(${p.id})">Marcar Realizada</button>
-                </form>
+                    <input type="date" class="form-control form-control-sm mb-2" id="birth-${p.id}" required>
+                    <button type="button" class="btn btn-warning btn-sm w-100 text-dark fw-bold" style="font-size: 0.75rem" onclick="processAdvanceStage2(${p.id})">Marcar Cita Concretada</button>
+                </div>
             `;
         } else if (p.stage === 3) {
-            innerHTML += `<br><small class="text-muted">RUT: ${p.rut}</small>`;
+            innerHTML += `<div class="small text-muted font-monospace my-1">RUT: ${p.rut} | G: ${p.gender}</div>`;
             
             let itemsOptions = '';
-            localDB.catalog.filter(i=>i.active).forEach(i => {
+            localDB.catalog.filter(i => i.active).forEach(i => {
                 itemsOptions += `<option value="${i.id}">${i.name} ($${i.price.toLocaleString('es-CL')})</option>`;
             });
 
             innerHTML += `
-                <form class="mt-2 pt-2 border-top bg-light p-2 rounded">
-                    <label class="small text-danger fw-bold d-block mb-1">Etapa 4: Contrato</label>
+                <div class="mt-2 pt-2 border-top bg-light p-2 rounded">
+                    <span class="small text-danger fw-bold d-block mb-1">Etapa 4: Formalización Obligatoria</span>
+                    <label class="small text-muted" for="doc-${p.id}">Carga Documental (Cédula/Contrato):</label>
                     <input type="file" class="form-control form-control-sm mb-2" id="doc-${p.id}" required>
+                    <label class="small text-muted" for="cat-${p.id}">Asignar Servicio:</label>
                     <select class="form-select form-select-sm mb-2" id="cat-${p.id}">${itemsOptions}</select>
                     
-                    <div class="p-1 border rounded bg-white mb-2">
-                        <span class="small d-block fw-bold text-center text-muted border-bottom mb-1">3 Referidos Obligatorios</span>
+                    <div class="p-2 border bg-white rounded mb-2 shadow-inner" style="font-size:0.75rem;">
+                        <span class="d-block text-center fw-bold text-secondary border-bottom pb-1 mb-2">Captura de 3 Referidos Obligatorios</span>
                         <input type="text" class="form-control form-control-sm mb-1" placeholder="Nombre Ref 1" id="refn1-${p.id}" required>
-                        <input type="text" class="form-control form-control-sm mb-2" placeholder="Fono Ref 1" id="reft1-${p.id}" required>
+                        <input type="tel" class="form-control form-control-sm mb-2" placeholder="Teléfono Ref 1" id="reft1-${p.id}" required>
                         <input type="text" class="form-control form-control-sm mb-1" placeholder="Nombre Ref 2" id="refn2-${p.id}" required>
-                        <input type="text" class="form-control form-control-sm mb-2" placeholder="Fono Ref 2" id="reft2-${p.id}" required>
+                        <input type="tel" class="form-control form-control-sm mb-2" placeholder="Teléfono Ref 2" id="reft2-${p.id}" required>
                         <input type="text" class="form-control form-control-sm mb-1" placeholder="Nombre Ref 3" id="refn3-${p.id}" required>
-                        <input type="text" class="form-control form-control-sm mb-1" placeholder="Fono Ref 3" id="reft3-${p.id}" required>
+                        <input type="tel" class="form-control form-control-sm id="reft3-${p.id}" required>
                     </div>
-                    <button type="button" class="btn btn-success btn-sm w-100" onclick="processAdvanceStage3(${p.id})">Cerrar Contrato</button>
-                </form>
+                    <button type="button" class="btn btn-danger btn-sm w-100 fw-bold" style="font-size: 0.75rem" onclick="processAdvanceStage3(${p.id})">Congelar Venta y Cerrar</button>
+                </div>
             `;
         } else if (p.stage === 4) {
-            const saleRecord = localDB.sales.find(s => s.prospectoId === p.id);
-            const catItem = localDB.catalog.find(i => i.id === saleRecord.catalogId);
+            const record = localDB.sales.find(s => s.prospectoId === p.id);
+            const item = localDB.catalog.find(i => i.id === record.catalogId);
             innerHTML += `
-                <div class="mt-2 p-1 bg-success bg-opacity-10 rounded border border-success text-center">
-                    <span class="text-success fw-bold small d-block">🎉 CONTRATO CONGELADO</span>
-                    <small class="text-muted d-block">${catItem.name}</small>
-                    <strong class="text-dark">$${saleRecord.precioHistorico.toLocaleString('es-CL')}</strong>
+                <div class="mt-2 p-2 bg-success bg-opacity-10 rounded border border-success text-center">
+                    <span class="text-success fw-bold d-block small">🎉 VENTA CONTRATADA</span>
+                    <span class="d-block small text-muted font-monospace">${item.name}</span>
+                    <strong class="text-dark">$${record.precioHistorico.toLocaleString('es-CL')}</strong>
                 </div>
             `;
         }
@@ -393,13 +368,16 @@ function renderPipelineStages() {
 
 function processAdvanceStage1(id) {
     const emailVal = document.getElementById(`mail-${id}`).value;
-    if(!emailVal.includes('@')) { alert("Email inválido."); return; }
+    if(!emailVal.includes('@')) { alert("Formato de correo electrónico inválido."); return; }
 
     const prospect = localDB.prospects.find(p => p.id === id);
     prospect.email = emailVal;
     prospect.stage = 2;
 
-    alert(`[CONEXIÓN API GOOGLE CALENDAR]\n• Evento sincronizado de forma transparente.\n• Invitación enviada a: ${emailVal}`);
+    // Simulación técnica transparente de conexión de API Externa exigida por el caso de uso
+    console.log(`[API MOCK CALL] Conectando con Google Calendar API...`);
+    console.log(`[API PAYLOAD] { guest: "${emailVal}", location: "Teams/Presencial", status: "PENDING" }`);
+    alert(`[CONEXIÓN API GOOGLE CALENDAR EXITOSA]\n\n• Reunión agendada de manera nativa.\n• Invitación oficial despachada a: ${emailVal}\n• Alertas de calendario sincronizadas.`);
     navigate('vendedor-sales');
 }
 
@@ -408,7 +386,7 @@ function processAdvanceStage2(id) {
     const gender = document.getElementById(`gender-${id}`).value;
     const birth = document.getElementById(`birth-${id}`).value;
 
-    if(rut.trim() === "" || birth === "") { alert("Campos obligatorios."); return; }
+    if(!rut || !birth) { alert("Todos los campos de datos duros de identificación son obligatorios."); return; }
 
     const prospect = localDB.prospects.find(p => p.id === id);
     prospect.rut = rut;
@@ -420,8 +398,8 @@ function processAdvanceStage2(id) {
 }
 
 function processAdvanceStage3(id) {
-    const fileInput = document.getElementById(`doc-${id}`);
-    const catalogId = parseInt(document.getElementById(`cat-${id}`).value);
+    const file = document.getElementById(`doc-${id}`).files[0];
+    const catId = parseInt(document.getElementById(`cat-${id}`).value);
     const rn1 = document.getElementById(`refn1-${id}`).value;
     const rt1 = document.getElementById(`reft1-${id}`).value;
     const rn2 = document.getElementById(`refn2-${id}`).value;
@@ -429,92 +407,79 @@ function processAdvanceStage3(id) {
     const rn3 = document.getElementById(`refn3-${id}`).value;
     const rt3 = document.getElementById(`reft3-${id}`).value;
 
-    if(!fileInput.files[0] || rn1==="" || rt1==="" || rn2==="" || rt2==="" || rn3==="" || rt3==="") {
-        alert("Falta adjuntar el archivo o los 3 referidos obligatorios.");
+    if(!file || !rn1 || !rt1 || !rn2 || !rt2 || !rn3 || !rt3) {
+        alert("Error de Negocio: Se exige obligatoriamente adjuntar el respaldo digital y capturar los 3 referidos comerciales.");
         return;
     }
 
     const prospect = localDB.prospects.find(p => p.id === id);
-    const catalogItem = localDB.catalog.find(i => i.id === catalogId);
+    const catalogItem = localDB.catalog.find(i => i.id === catId);
 
     prospect.stage = 4;
-    prospect.document = fileInput.files[0].name;
-    prospect.assignedItemId = catalogId;
+    prospect.document = file.name;
+    prospect.assignedItemId = catId;
     prospect.finalPrice = catalogItem.price;
 
+    // Congelar precio histórico de venta exacta solicitado
     localDB.sales.push({
         id: Date.now(),
         prospectoId: id,
-        catalogId: catalogId,
+        catalogId: catId,
         precioHistorico: catalogItem.price
     });
 
-    const comunaOrigen = prospect.comuna;
-    const referidos = [{ name: rn1, phone: rt1 }, { name: rn2, phone: rt2 }, { name: rn3, phone: rt3 }];
-
-    referidos.forEach(ref => {
+    // Inyección automatizada de referidos en Cascada a Etapa 1
+    const referidos = [{n: rn1, t: rt1}, {n: rn2, t: rt2}, {n: rn3, t: rt3}];
+    referidos.forEach((ref, index) => {
         localDB.prospects.push({
-            id: Date.now() + Math.random(),
+            id: Date.now() + index + Math.random(),
             userId: localDB.session.userId,
             stage: 1,
-            name: ref.name,
-            comuna: comunaOrigen,
-            phone: ref.phone,
+            name: ref.n,
+            comuna: prospect.comuna,
+            phone: ref.t,
             email: "", rut: "", gender: "", birthdate: "", document: "", assignedItemId: null, finalPrice: null
         });
     });
 
-    alert("🎉 ¡Venta cerrada con éxito y 3 referidos ingresados a la Etapa 1!");
+    alert("🎉 ¡Felicidades! Contrato resguardado con su precio histórico e ingresados los 3 referidos en cadena a tu Etapa 1.");
     navigate('vendedor-sales');
 }
 
-// VISTA: PANEL ADMINISTRADOR - GESTIÓN DE CATÁLOGO
+// ==========================================================================
+// VISTAS PERFIL ADMINISTRADOR
+// ==========================================================================
+
 function renderAdminCatalog(container) {
     container.innerHTML = `
-        <h2>Gestión Corporativa de Catálogo</h2>
-        <p class="text-muted small">Panel exclusivo de control de oferta.</p>
+        <h1 class="h2">Administración Global del Catálogo</h1>
+        <p class="text-muted small">Mantenimiento e integridad referencial de productos y servicios funerarios corporativos.</p>
         
-        <div class="card p-3 shadow-sm mb-4">
-            <h5 id="catalog-form-title">Agregar Nuevo Item</h5>
-            <form id="form-admin-catalog" class="row g-3 mt-1">
-                <input type="hidden" id="edit-item-id" value="">
-                <div class="col-md-4">
-                    <label class="small text-muted">Nombre Comercial *</label>
-                    <input type="text" class="form-control form-control-sm" id="cat-name" required>
-                </div>
+        <div class="card p-3 shadow-sm mb-4 bg-white">
+            <h2 class="h6 text-primary fw-bold" id="form-title">Agregar Nuevo Item al Sistema</h2>
+            <form id="form-admin-catalog" class="row g-2 mt-1">
+                <input type="hidden" id="edit-id" value="">
+                <div class="col-md-3"><input type="text" id="cat-name" class="form-control form-control-sm" placeholder="Nombre comercial" required></div>
                 <div class="col-md-2">
-                    <label class="small text-muted">Categoría *</label>
-                    <select class="form-select form-select-sm" id="cat-category">
+                    <select id="cat-category" class="form-select form-select-sm">
                         <option value="Producto">Producto</option><option value="Servicio">Servicio</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="small text-muted">Precio Venta ($ CLP) *</label>
-                    <input type="number" class="form-control form-control-sm" id="cat-price" min="1" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="small text-muted">Descripción Corta *</label>
-                    <input type="text" class="form-control form-control-sm" id="cat-short" required>
-                </div>
-                <div class="col-12">
-                    <label class="small text-muted">Ficha Detallada de Contrato</label>
-                    <textarea class="form-control form-control-sm" id="cat-long" rows="2"></textarea>
-                </div>
-                <div class="col-12 text-end">
-                    <button type="button" class="btn btn-secondary btn-sm me-2" onclick="navigate('admin-catalog')">Limpiar</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Guardar en Catálogo</button>
+                <div class="col-md-2"><input type="number" id="cat-price" class="form-control form-control-sm" placeholder="Precio ($ CLP)" required></div>
+                <div class="col-md-5"><input type="text" id="cat-short" class="form-control form-control-sm" placeholder="Descripción breve" required></div>
+                <div class="col-12 mt-2"><textarea id="cat-long" class="form-control form-control-sm" rows="2" placeholder="Ficha detallada del contrato"></textarea></div>
+                <div class="col-12 text-end mt-2">
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">Guardar Item</button>
                 </div>
             </form>
         </div>
 
-        <div class="card p-3 shadow-sm">
-            <h5>Items Disponibles en el Sistema</h5>
+        <div class="card p-3 shadow-sm bg-white">
+            <h3 class="h6 fw-bold mb-2">Catálogo de Productos Activos e Inactivos (Integridad Referencial Protegida)</h3>
             <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle mt-2">
+                <table class="table table-sm table-hover align-middle">
                     <thead class="table-light">
-                        <tr>
-                            <th>Categoría</th><th>Nombre</th><th>Descripción Corta</th><th>Precio Lista</th><th>Estado</th><th>Acciones</th>
-                        </tr>
+                        <tr><th>Categoría</th><th>Nombre</th><th>Precio Lista</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="catalog-table-body"></tbody>
                 </table>
@@ -527,49 +492,55 @@ function renderAdminCatalog(container) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><span class="badge bg-secondary">${item.category}</span></td>
-            <td><strong>${item.name}</strong></td>
-            <td>${item.shortDesc}</td>
+            <td><strong>${item.name}</strong><br><small class="text-muted">${item.shortDesc}</small></td>
             <td>$${item.price.toLocaleString('es-CL')}</td>
             <td><span class="fw-bold ${item.active?'text-success':'text-danger'}">${item.active?'Activo':'Inactivo'}</span></td>
             <td>
-                <button class="btn btn-outline-primary btn-xs py-0 px-2" onclick="loadItemToEdit(${item.id})">Editar</button>
-                <button class="btn ${item.active?'btn-outline-danger':'btn-outline-success'} btn-xs py-0 px-2" onclick="toggleItemActive(${item.id})">
-                    ${item.active?'Desactivar':'Reactivar'}
+                <button class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.75rem;" onclick="loadCatalogEdit(${item.id})">Editar</button>
+                <button class="btn ${item.active?'btn-outline-danger':'btn-outline-success'} btn-xs py-0 px-2" style="font-size:0.75rem;" onclick="toggleCatalogState(${item.id})">
+                    ${item.active?'Desactivar (Soft Delete)':'Reactivar'}
                 </button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 
-    document.getElementById('form-admin-catalog').addEventListener('submit', function(e) {
+    document.getElementById('form-admin-catalog').addEventListener('submit', (e) => {
         e.preventDefault();
-        const editId = document.getElementById('edit-item-id').value;
-        const name = document.getElementById('cat-name').value;
-        const category = document.getElementById('cat-category').value;
+        const id = document.getElementById('edit-id').value;
         const price = parseInt(document.getElementById('cat-price').value);
-        const shortDesc = document.getElementById('cat-short').value;
-        const longDesc = document.getElementById('cat-long').value;
 
-        if(editId) {
-            const item = localDB.catalog.find(i => i.id == editId);
-            if (item.price !== price) {
-                localDB.priceHistory.push({ catalogId: item.id, price: price, date: new Date().toISOString().split('T')[0] });
-                alert(`[HISTÓRICO] Precio modificado. Se resguarda el valor anterior para contratos históricos.`);
+        if(id) {
+            const item = localDB.catalog.find(i => i.id == id);
+            if(item.price !== price) {
+                localDB.priceHistory.push({ catalogId: item.id, price: price, date: "2026-05-25" });
+                alert("[POLÍTICA DE PRECIOS HISTÓRICOS]\n\nSe detectó variación en la tarifa actual. Se ha guardado el valor anterior en el histórico para salvaguardar los contratos pasados.");
             }
-            item.name = name; item.category = category; item.price = price; item.shortDesc = shortDesc; item.longDesc = longDesc;
+            item.name = document.getElementById('cat-name').value;
+            item.category = document.getElementById('cat-category').value;
+            item.price = price;
+            item.shortDesc = document.getElementById('cat-short').value;
+            item.longDesc = document.getElementById('cat-long').value;
         } else {
-            const newItem = { id: Date.now(), name, category, price, shortDesc, longDesc, active: true };
+            const newItem = {
+                id: Date.now(),
+                name: document.getElementById('cat-name').value,
+                category: document.getElementById('cat-category').value,
+                price: price,
+                shortDesc: document.getElementById('cat-short').value,
+                longDesc: document.getElementById('cat-long').value,
+                active: true
+            };
             localDB.catalog.push(newItem);
-            localDB.priceHistory.push({ catalogId: newItem.id, price, date: new Date().toISOString().split('T')[0] });
         }
         navigate('admin-catalog');
     });
 }
 
-function loadItemToEdit(id) {
+function loadCatalogEdit(id) {
     const item = localDB.catalog.find(i => i.id === id);
-    document.getElementById('catalog-form-title').innerText = `Modificar: ${item.name}`;
-    document.getElementById('edit-item-id').value = item.id;
+    document.getElementById('form-title').innerText = `Modificando Item: ${item.name}`;
+    document.getElementById('edit-id').value = item.id;
     document.getElementById('cat-name').value = item.name;
     document.getElementById('cat-category').value = item.category;
     document.getElementById('cat-price').value = item.price;
@@ -577,21 +548,21 @@ function loadItemToEdit(id) {
     document.getElementById('cat-long').value = item.longDesc;
 }
 
-function toggleItemActive(id) {
+function toggleCatalogState(id) {
     const item = localDB.catalog.find(i => i.id === id);
     item.active = !item.active;
+    alert(`Estado del ítem modificado a: ${item.active ? 'Activo' : 'Inactivo (Ocultado de nuevas ventas sin eliminación física)'}`);
     navigate('admin-catalog');
 }
 
-// VISTA: PANEL ADMINISTRADOR - METAS CORPORATIVAS
 function renderAdminGoals(container) {
     container.innerHTML = `
-        <h2>Configuración de Metas Corporativas</h2>
-        <p class="text-muted small">Establece el estándar de volumen diario esperado y rangos base del semáforo.</p>
-        <div class="card p-4 shadow-sm bg-white">
+        <h1 class="h2">Configuración Base de Metas y Semáforos</h1>
+        <p class="text-muted small">Establece los mínimos corporativos diarios que regirán a la fuerza de ventas.</p>
+        <div class="card p-4 bg-white shadow-sm">
             <form id="form-corporate-goals">
                 <div id="goals-rows-container"></div>
-                <button type="submit" class="btn btn-primary btn-sm mt-2">Guardar Estándar Corporativo</button>
+                <button type="submit" class="btn btn-primary btn-sm mt-3 fw-bold">Guardar Estándar Global</button>
             </form>
         </div>
     `;
@@ -602,28 +573,19 @@ function renderAdminGoals(container) {
         const d = document.createElement('div');
         d.className = "row g-2 align-items-center mb-3 border-bottom pb-2";
         d.innerHTML = `
-            <div class="col-md-3"><strong>${goal.name}</strong></div>
+            <div class="col-md-3"><strong>Etapa ${stageId}: ${goal.name}</strong></div>
             <div class="col-md-2">
                 <label class="small text-muted d-block">Meta Diaria</label>
                 <input type="number" class="form-control form-control-sm" name="target_${stageId}" value="${goal.dailyTarget}" required>
             </div>
-            <div class="col-md-2">
-                <label class="small text-muted d-block">Techo Rojo (%)</label>
-                <input type="number" class="form-control form-control-sm" name="red_${stageId}" value="${goal.redMax}" required>
-            </div>
-            <div class="col-md-2">
-                <label class="small text-muted d-block">Techo Amarillo (%)</label>
-                <input type="number" class="form-control form-control-sm" name="yellow_${stageId}" value="${goal.yellowMax}" required>
-            </div>
-            <div class="col-md-3">
-                <label class="small text-muted d-block">Piso Verde (%)</label>
-                <input type="number" class="form-control form-control-sm" name="green_${stageId}" value="${goal.greenMin}" required>
-            </div>
+            <div class="col-md-2"><label class="small text-muted d-block">Techo Rojo %</label><input type="number" class="form-control form-control-sm" name="red_${stageId}" value="${goal.redMax}" required></div>
+            <div class="col-md-2"><label class="small text-muted d-block">Techo Amar. %</label><input type="number" class="form-control form-control-sm" name="yellow_${stageId}" value="${goal.yellowMax}" required></div>
+            <div class="col-md-3"><label class="small text-muted d-block">Piso Verde %</label><input type="number" class="form-control form-control-sm" name="green_${stageId}" value="${goal.greenMin}" required></div>
         `;
         rContainer.appendChild(d);
     }
 
-    document.getElementById('form-corporate-goals').addEventListener('submit', function(e) {
+    document.getElementById('form-corporate-goals').addEventListener('submit', (e) => {
         e.preventDefault();
         const f = new FormData(e.target);
         for (let stageId = 1; stageId <= 4; stageId++) {
@@ -632,7 +594,7 @@ function renderAdminGoals(container) {
             localDB.corporateGoals[stageId].yellowMax = parseInt(f.get(`yellow_${stageId}`));
             localDB.corporateGoals[stageId].greenMin = parseInt(f.get(`green_${stageId}`));
         }
-        alert("Línea base de rendimiento corporativo guardada.");
+        alert("Líneas base corporativas actualizadas.");
         navigate('admin-catalog');
     });
 }
